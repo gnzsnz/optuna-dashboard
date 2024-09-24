@@ -1,19 +1,18 @@
 from __future__ import annotations
 
 import os.path
-from pathlib import Path
 import re
+import warnings
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from optuna.storages import BaseStorage
-from optuna.storages import RDBStorage
+from optuna.exceptions import ExperimentalWarning
+from optuna.storages import BaseStorage, RDBStorage
 from optuna.version import __version__ as optuna_ver
 from packaging import version
 
-
 if TYPE_CHECKING:
-    from typing import Optional
-    from typing import Union
+    from typing import Optional, Union
 
     from optuna.storages import JournalStorage
 
@@ -46,6 +45,15 @@ def get_storage(
 ) -> BaseStorage:
     if isinstance(storage, BaseStorage):
         return storage
+
+    env_storage = os.environ.get("OPTUNA_STORAGE")
+    if env_storage is not None and storage is None:
+        warnings.warn(
+            "Specifying the storage url via 'OPTUNA_STORAGE' environment variable"
+            " is an experimental feature. The interface can change in the future.",
+            ExperimentalWarning,
+        )
+        storage = env_storage
 
     if storage_class:
         if storage_class == "RDBStorage":
@@ -97,9 +105,7 @@ def get_journal_file_storage(file_path: str) -> JournalStorage:
     if version.parse(optuna_ver) < version.Version("v3.1.0"):
         raise ValueError("JournalRedisStorage is available from Optuna v3.1.0")
 
-    from optuna.storages import JournalFileOpenLock
-    from optuna.storages import JournalFileStorage
-    from optuna.storages import JournalStorage
+    from optuna.storages import JournalFileOpenLock, JournalFileStorage, JournalStorage
 
     storage: JournalStorage
     if os.name == "nt":
@@ -114,7 +120,6 @@ def get_journal_redis_storage(redis_url: str) -> JournalStorage:
     if version.parse(optuna_ver) < version.Version("v3.1.0"):
         raise ValueError("JournalRedisStorage is available from Optuna v3.1.0")
 
-    from optuna.storages import JournalRedisStorage
-    from optuna.storages import JournalStorage
+    from optuna.storages import JournalRedisStorage, JournalStorage
 
     return JournalStorage(JournalRedisStorage(redis_url))

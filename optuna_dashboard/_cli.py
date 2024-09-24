@@ -89,7 +89,11 @@ def auto_select_server(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Real-time dashboard for Optuna.")
-    parser.add_argument("storage", help="Storage URL (e.g. sqlite:///example.db)", type=str)
+    parser.add_argument(
+        "storage", 
+        help="Storage URL (e.g. sqlite:///example.db)", 
+        type=str,default=None
+    )
     parser.add_argument(
         "--storage-class",
         help="Storage class hint (e.g. JournalFileStorage)",
